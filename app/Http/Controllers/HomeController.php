@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Message;
 use App\Models\Room;
-
+use App\Models\User;
+use Auth;
 class HomeController extends Controller
 {
     /**
@@ -13,10 +14,10 @@ class HomeController extends Controller
      *
      * @return void
      */
-    // public function __construct()
-    // {
-    //     $this->middleware('auth');
-    // }
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+    }
 
     /**
      * Show the application dashboard.
@@ -30,4 +31,23 @@ class HomeController extends Controller
 
         return response()->json(['messages'=>$messages]);
     }
+
+    public function getUserMessage($username){
+
+        
+        $user_id = Auth::user()->id;
+        $to_user = User::where('username',$username)->first();
+
+        $message= Room::with(['toUser'=>function($query){
+            $query->select('first_name','last_name','username');
+        },'messages'])
+        ->where('to_id', $to_user->id)
+        ->where('from_id', $user_id)
+        ->get();
+
+        return response()->json(['messages'=>$message]);
+
+    }
+
+
 }
